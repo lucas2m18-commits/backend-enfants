@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pago completado | Enfants Du Nord</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      text-align: center;
+      padding: 50px;
+    }
+
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: black;
+    }
+
+    p {
+      color: #555;
+      margin: 15px 0;
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 20px;
+      background: black;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+
+    .btn:hover {
+      opacity: 0.8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h1>🎉 ¡Pago completado!</h1>
+
+    <p>Gracias por tu compra en <strong>Enfants Du Nord</strong></p>
+
+    <p>Recibirás un email con los detalles de tu pedido.</p>
+
+    <a href="index.html" class="btn">Volver a la tienda</a>
+  </div>
+
+  <script>
+    // 🧹 limpiar carrito después del pago
+    localStorage.removeItem("cart");
+  </script>
+
+</body>
+</html>

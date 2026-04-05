@@ -1,0 +1,14 @@
+{
+  "name": "backend-enfants",
+  "version": "1.0.0",
+  "description": "Backend Stripe Enfants Du Nord",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "stripe": "^21.0.1"
+  }
+}
