@@ -56,12 +56,21 @@
 
     <p>Recibirás un email con los detalles de tu pedido.</p>
 
-    <a href="index.html" class="btn">Volver a la tienda</a>
+    <p>Redirigiendo a la tienda...</p>
+
+    <a href="https://enfantsdunord.com" class="btn">
+      Volver a la tienda
+    </a>
   </div>
 
   <script>
-    // 🧹 limpiar carrito después del pago
+    // 🧹 limpiar carrito
     localStorage.removeItem("cart");
+
+    // 🔄 redirigir automáticamente
+    setTimeout(() => {
+      window.location.href = "https://enfantsdunord.com";
+    }, 3000);
   </script>
 
 </body>
