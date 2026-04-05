@@ -7,6 +7,39 @@ const path = require('path');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.use(cors());
+
+// 🔥 WEBHOOK STRIPE (CORRECTO)
+app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+
+    const sig = req.headers['stripe-signature'];
+  
+    let event;
+  
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+    } catch (err) {
+      console.error("❌ Error verificando webhook:", err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+  
+    // ✅ Evento verificado
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+  
+      console.log("💰 PAGO CONFIRMADO:", session);
+  
+      // 👉 AQUÍ luego:
+      // guardar pedido
+      // enviar email
+    }
+  
+    res.json({ received: true });
+  });
+
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, 'public')));
