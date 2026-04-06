@@ -77,14 +77,18 @@ app.post('/api/checkout', async (req, res) => {
     });
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: line_items,
-      mode: 'payment',
-
-      success_url: 'https://enfantsdunord.com/success.html',
-      cancel_url: 'https://enfantsdunord.com/cart.html',
-    });
-
+        payment_method_types: ['card'],
+        line_items,
+        mode: 'payment',
+      
+        shipping_address_collection: {
+          allowed_countries: ['ES', 'FR', 'PT']
+        },
+      
+        success_url: 'https://enfantsdunord.com/success.html',
+        cancel_url: 'https://enfantsdunord.com/cart.html',
+      });
+      
     res.json({ url: session.url });
 
   } catch (error) {
