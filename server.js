@@ -3,51 +3,86 @@ const app = express();
 const cors = require('cors');
 const Stripe = require('stripe');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
+// 🔑 STRIPE
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+
+// 🔑 SUPABASE
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
 
 app.use(cors());
 
-// 🔥 WEBHOOK STRIPE (CORRECTO)
-app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+// 🔥 WEBHOOK STRIPE (GUARDAR PEDIDOS)
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
 
-    const sig = req.headers['stripe-signature'];
-  
-    let event;
-  
+  const sig = req.headers['stripe-signature'];
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error("❌ Error verificando webhook:", err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // ✅ EVENTO DE PAGO COMPLETADO
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+
+    console.log("💰 PAGO CONFIRMADO");
+
     try {
-      event = stripe.webhooks.constructEvent(
-        req.body,
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET
-      );
-    } catch (err) {
-      console.error("❌ Error verificando webhook:", err.message);
-      return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
-  
-    // ✅ Evento verificado
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-  
-      console.log("💰 PAGO CONFIRMADO:", session);
-  
-      // 👉 AQUÍ luego:
-      // guardar pedido
-      // enviar email
-    }
-  
-    res.json({ received: true });
-  });
+      const customer = session.customer_details;
 
+      const order = {
+        name: customer.name,
+        email: customer.email,
+        address: customer.address?.line1 || "No address",
+        items: {},
+        total: session.amount_total / 100
+      };
+
+      console.log("🚀 intentando guardar pedido...");
+
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([order]);
+
+      if (error) {
+        console.error("❌ ERROR SUPABASE:", error);
+      } else {
+        console.log("✅ PEDIDO GUARDADO:", data);
+      }
+
+    } catch (err) {
+      console.error("❌ ERROR GENERAL:", err);
+    }
+  }
+
+  res.json({ received: true });
+});
+
+// 👉 IMPORTANTE: después del webhook
 app.use(express.json());
 
+// 👉 SERVIR ARCHIVOS (success.html)
 app.use(express.static(path.join(__dirname, 'public')));
 
+// 👉 TEST
 app.get('/', (req, res) => {
   res.send('Backend funcionando 🚀');
 });
 
+// 🔥 CREAR CHECKOUT
 app.post('/api/checkout', async (req, res) => {
 
   const cart = req.body;
@@ -65,6 +100,7 @@ app.post('/api/checkout', async (req, res) => {
       quantity: 1,
     }));
 
+    // 🚚 ENVÍO
     line_items.push({
       price_data: {
         currency: 'eur',
@@ -77,26 +113,27 @@ app.post('/api/checkout', async (req, res) => {
     });
 
     const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items,
-        mode: 'payment',
-      
-        shipping_address_collection: {
-          allowed_countries: ['ES', 'FR', 'PT']
-        },
-      
-        success_url: 'https://enfantsdunord.com/success.html',
-        cancel_url: 'https://enfantsdunord.com/cart.html',
-      });
-      
+      payment_method_types: ['card'],
+      line_items,
+      mode: 'payment',
+
+      shipping_address_collection: {
+        allowed_countries: ['ES', 'FR', 'PT']
+      },
+
+      success_url: 'https://enfantsdunord.com/success.html',
+      cancel_url: 'https://enfantsdunord.com/cart.html',
+    });
+
     res.json({ url: session.url });
 
   } catch (error) {
-    console.error(error);
+    console.error("❌ ERROR CHECKOUT:", error);
     res.status(500).json({ error: "Error creando pago" });
   }
 });
 
+// 🚀 SERVER
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
