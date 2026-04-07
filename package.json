@@ -10,6 +10,7 @@
     "@supabase/supabase-js": "^2.102.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
+    "resend": "^6.10.0",
     "stripe": "^21.0.1"
   }
 }
